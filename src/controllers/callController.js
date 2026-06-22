@@ -45,6 +45,7 @@ async function triggerCallForContact(contactId) {
     phoneNumber: phone,
     contactId,
     name: pickName(contact),
+    firstName: contact.firstName,
     metadata: { ghlLocationId: config.ghl.locationId },
   });
 

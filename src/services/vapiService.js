@@ -10,7 +10,7 @@ const client = axios.create({
   timeout: 15000,
 });
 
-async function createOutboundCall({ phoneNumber, contactId, name, metadata = {} }) {
+async function createOutboundCall({ phoneNumber, contactId, name, firstName, metadata = {} }) {
   if (!config.vapi.assistantId) throw new Error('VAPI assistantId not configured');
   if (!config.vapi.phoneNumberId) throw new Error('VAPI phoneNumberId not configured');
 
@@ -20,6 +20,11 @@ async function createOutboundCall({ phoneNumber, contactId, name, metadata = {} 
     customer: {
       number: phoneNumber,
       name: name || undefined,
+    },
+    assistantOverrides: {
+      variableValues: {
+        first_name: (firstName && firstName.trim()) || 'there',
+      },
     },
     metadata: {
       ghlContactId: contactId,
