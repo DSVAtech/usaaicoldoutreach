@@ -14,6 +14,14 @@ function pickName(contact) {
   return contact.fullNameLowerCase || contact.contactName || `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || null;
 }
 
+function pickFirstName(contact) {
+  if (!contact) return null;
+  if (contact.firstName && contact.firstName.trim()) return contact.firstName.trim();
+  const full = contact.contactName || contact.fullNameLowerCase || '';
+  const first = full.trim().split(/\s+/)[0];
+  return first || null;
+}
+
 async function triggerCallForContact(contactId) {
   const contact = await ghl.getContact(contactId);
   if (!contact) throw new Error(`Contact ${contactId} not found`);
@@ -41,11 +49,14 @@ async function triggerCallForContact(contactId) {
     return { skipped: true, reason: 'outside_hours' };
   }
 
+  const firstName = pickFirstName(contact);
+  console.log(`[call] Dialing ${contactId} | name="${pickName(contact)}" first_name="${firstName || '(none)'}"`);
+
   const call = await vapi.createOutboundCall({
     phoneNumber: phone,
     contactId,
     name: pickName(contact),
-    firstName: contact.firstName,
+    firstName,
     metadata: { ghlLocationId: config.ghl.locationId },
   });
 
