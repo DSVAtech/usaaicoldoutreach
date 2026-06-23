@@ -108,11 +108,18 @@ function classifyOutcome(vapiReport) {
   const endedReason = vapiReport.endedReason || vapiReport.call?.endedReason || '';
   const summary = (analysis.summary || '').toLowerCase();
 
+  const carrierNoAnswer = /no[- ]?answer|voicemail|busy|customer-did-not-answer|not-answered|silence-timed-out|twilio-failed|pipeline-error|failed/i.test(endedReason);
+
   if (structured.demo_booked === true) return 'demo-booked';
+
+  if (structured.outcome === 'no-answer' && !carrierNoAnswer) {
+    console.log(`[classify] AI said no-answer but carrier endedReason="${endedReason}" — lead DID pick up. Overriding to not-interested.`);
+    return 'not-interested';
+  }
   if (structured.outcome) return structured.outcome;
 
   if (structured.dnc === true || /do not call|don't call|stop calling/.test(summary)) return 'dnc';
-  if (/no[- ]?answer|voicemail|busy|customer-did-not-answer|not-answered|silence-timed-out|twilio-failed|pipeline-error|failed/i.test(endedReason)) return 'no-answer';
+  if (carrierNoAnswer) return 'no-answer';
   if (structured.demo_booked === true || /demo (is )?(booked|scheduled|set)|appointment (booked|set|scheduled)|booked (a |the )?demo/.test(summary)) return 'demo-booked';
   if (structured.interested === true || /very interested|sign me up|tell me more|sounds great/.test(summary)) return 'hot-lead';
   if (structured.callback === true || /call ?back|call me later/.test(summary)) return 'callback-requested';
