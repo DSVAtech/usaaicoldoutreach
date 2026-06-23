@@ -225,15 +225,15 @@ async function handleCallOutcome(vapiReport) {
 
   const { tags } = config;
   const tagPlan = {
-    'hot-lead':           { add: [tags.hotLead],       remove: [tags.queue] },
-    'warm-lead':          { add: ['warm-lead'],        remove: [tags.queue] },
-    'demo-booked':        { add: ['demo-booked', 'awaiting-boss-followup'], remove: [tags.queue] },
-    'callback-requested': { add: [tags.callback],      remove: [tags.queue] },
-    'not-interested':     { add: [tags.notInterested], remove: [tags.queue] },
-    'no-answer':          { add: [tags.noAnswer],      remove: [] },
-    'dnc':                { add: [tags.dnc],           remove: [tags.queue, tags.noAnswer, tags.callback] },
-    'enquiry-logged':     { add: [tags.enquiry],       remove: [tags.queue] },
-  }[outcome] || { add: [tags.enquiry], remove: [tags.queue] };
+    'hot-lead':           { add: [tags.hotLead, tags.coldCallDone],       remove: [tags.queue] },
+    'warm-lead':          { add: ['warm-lead', tags.coldCallDone],        remove: [tags.queue] },
+    'demo-booked':        { add: ['demo-booked', 'awaiting-boss-followup', tags.coldCallDone], remove: [tags.queue] },
+    'callback-requested': { add: [tags.callback, tags.coldCallDone],      remove: [tags.queue] },
+    'not-interested':     { add: [tags.notInterested, tags.coldCallDone], remove: [tags.queue] },
+    'no-answer':          { add: [tags.noAnswer],                         remove: [] },
+    'dnc':                { add: [tags.dnc, tags.coldCallDone],           remove: [tags.queue, tags.noAnswer, tags.callback] },
+    'enquiry-logged':     { add: [tags.enquiry, tags.coldCallDone],       remove: [tags.queue] },
+  }[outcome] || { add: [tags.enquiry, tags.coldCallDone], remove: [tags.queue] };
 
   if (tagPlan.add.length) {
     try {

@@ -33,6 +33,7 @@ const config = {
     noAnswer: 'no-answer',
     dnc: 'dnc',
     enquiry: 'enquiry-logged',
+    coldCallDone: 'coldcalldone',
   },
   pipeline: {
     id: process.env.pipelineid || null,
