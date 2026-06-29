@@ -1,5 +1,6 @@
 const ghl = require('../services/ghlService');
 const vapi = require('../services/vapiService');
+const n8n = require('../services/n8nService');
 const { isWithinCallingHours } = require('../utils/callingHours');
 const { parseDemoTime } = require('../utils/parseDemoTime');
 const { DateTime } = require('luxon');
@@ -306,6 +307,38 @@ async function handleCallOutcome(vapiReport) {
     } catch (err) {
       console.error(`[ghl] ❌ task FAILED:`, err.response?.data || err.message);
     }
+  }
+
+  try {
+    const contact = await ghl.getContact(contactId).catch(() => null);
+    const startedAt = vapiReport.startedAt || vapiReport.call?.startedAt || vapiReport.createdAt || new Date().toISOString();
+    const endedAt = vapiReport.endedAt || vapiReport.call?.endedAt;
+    const durationSec =
+      vapiReport.durationSeconds ||
+      vapiReport.call?.durationSeconds ||
+      (endedAt && startedAt ? Math.round((new Date(endedAt) - new Date(startedAt)) / 1000) : null);
+    const recordingUrl = vapiReport.recordingUrl || vapiReport.call?.recordingUrl || vapiReport.stereoRecordingUrl || null;
+    const analysisSummary = (vapiReport.analysis || vapiReport.call?.analysis || {}).summary || null;
+
+    await n8n.notifyCallDone({
+      contact_id: contactId,
+      first_name: pickFirstName(contact) || '',
+      full_name: pickName(contact) || '',
+      phone: pickPhone(contact) || '',
+      tags: (contact?.tags || []).join(', '),
+      outcome,
+      sentiment: sd.sentiment || null,
+      summary: analysisSummary,
+      duration_seconds: durationSec,
+      recording_url: recordingUrl,
+      callback_time: sd.callback_time || null,
+      demo_time: sd.demo_time || null,
+      key_enquiries: sd.key_enquiries || null,
+      note_body: note,
+      date_created: startedAt,
+    });
+  } catch (err) {
+    console.error('[n8n] notify build FAILED:', err.message);
   }
 
   console.log(`[outcome] Contact ${contactId} -> ${outcome}`);

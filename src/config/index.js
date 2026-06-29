@@ -35,6 +35,9 @@ const config = {
     enquiry: 'enquiry-logged',
     coldCallDone: 'coldcalldone',
   },
+  n8n: {
+    doneWebhookUrl: process.env.n8ndonewebhookurl || null,
+  },
   pipeline: {
     id: process.env.pipelineid || null,
     stages: {
