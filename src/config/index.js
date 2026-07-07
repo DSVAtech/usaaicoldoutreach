@@ -16,9 +16,9 @@ const config = {
     structuredOutputId: process.env.structuredoutputid || null,
   },
   calling: {
-    timezoneDefault: 'Australia/Sydney',
-    hourStart: 9,
-    hourEnd: 20,
+    timezoneDefault: 'America/Chicago',
+    hourStart: 0,
+    hourEnd: 24,
     maxNoAnswerRetries: 3,
     spacingSeconds: parseInt(process.env.callspacingseconds || '60', 10),
     maxConcurrent: parseInt(process.env.maxconcurrentcalls || '1', 10),
