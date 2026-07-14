@@ -5,6 +5,7 @@ const { isWithinCallingHours } = require('../utils/callingHours');
 const { parseDemoTime } = require('../utils/parseDemoTime');
 const { DateTime } = require('luxon');
 const config = require('../config');
+const { enqueueFront } = require('../utils/callQueue');
 
 function pickPhone(contact) {
   return contact?.phone || contact?.phoneNumber || null;
@@ -254,8 +255,10 @@ async function handleCallOutcome(vapiReport) {
     // Attempt 2 missed — give up. Drop retry tag + queue, mark final + done.
     tagPlan = { add: [tags.noAnswerFinal, tags.coldCallDone], remove: [tags.noAnswerRetry, tags.queue, tags.productionQueue] };
   } else if (outcome === 'no-answer') {
-    // Attempt 1 missed — flag for retry. GHL workflow re-adds queue tag after 30 min.
-    tagPlan = { add: [tags.noAnswer, tags.noAnswerRetry], remove: [tags.queue, tags.productionQueue] };
+    // Attempt 1 missed — push back to front of queue for immediate retry.
+    tagPlan = { add: [tags.noAnswer, tags.noAnswerRetry], remove: [] };
+    enqueueFront(contactId, () => triggerCallForContact(contactId));
+    console.log(`[outcome] no-answer attempt 1 — re-queued at front for immediate retry`);
   } else {
     // Reached the lead — clear any pending retry flag along with the normal tag changes
     tagPlan = {
